@@ -25,7 +25,7 @@ The app under test is Task Tracker, in `app/`. You log in, then add, complete, f
 │   ├── login.spec.ts                  # login, wrong password, empty form, logout
 │   └── tasks.spec.ts                  # add, validate, complete, filter, delete, reload
 ├── .github/workflows/
-│   ├── ci.yml                         # manual only: test SIT or a fresh build on the runner
+│   ├── manual-test.yml                # manual only: test SIT or a fresh build on the runner
 │   └── sit.yml                        # on a sit_* tag: build, deploy to SIT, test SIT
 ├── playwright.config.ts               # baseURL (localhost or SIT_URL), retries, reporters
 └── package.json                       # npm scripts
@@ -99,7 +99,7 @@ The tests open the app with `page.goto('./')`, not `page.goto('/')`. On GitHub P
 
 Pushing to `main` triggers neither workflow.
 
-### Run tests (manual) (`.github/workflows/ci.yml`)
+### Run tests (manual) (`.github/workflows/manual-test.yml`)
 
 This workflow runs only when you start it by hand. In the Actions tab, pick "Run tests (manual)", click **Run workflow**, and choose the inputs:
 
