@@ -11,10 +11,8 @@ name: Run tests (manual or schedule)
 
 on:
   schedule:
-    # Cron in UTC: minute 17 of every hour. GitHub is busiest at minute 0,
-    # so runs scheduled then are more often delayed or dropped.
-    # Scheduled runs use the workflow file on the default branch (main).
-    - cron: '0 9 * * *'
+    # Run the tests every Monday at 9am UTC.
+    - cron: '0 9 * * 1'
   workflow_dispatch:
     inputs:
       target:
