@@ -14,7 +14,7 @@ on:
     # Cron in UTC: minute 17 of every hour. GitHub is busiest at minute 0,
     # so runs scheduled then are more often delayed or dropped.
     # Scheduled runs use the workflow file on the default branch (main).
-    - cron: '17 * * * *'
+    - cron: '0 9 * * *'
   workflow_dispatch:
     inputs:
       target:
