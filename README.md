@@ -22,6 +22,7 @@ Requirements: Node.js 20 or newer.
 
 ```bash
 npm install                        # install @playwright/test
+npx playwright install
 npx playwright install chromium    # download the browser (first time only)
 
 npm test                           # run all tests headless
