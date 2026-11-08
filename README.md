@@ -86,15 +86,6 @@ GitHub Actions sets `CI=true`, and the config uses it to change behaviour on CI:
 3. Unzip it and run `npx playwright show-report path/to/playwright-report`.
 4. Click a failed test to see its screenshot and trace (a timeline of every action, DOM snapshot and network call).
 
-## Ideas for practice
-
-- **Break a test on purpose** (for example, expect `'3'` in the cart badge) and push it. Watch CI fail, then download the report and read the trace.
-- **Add more browsers**: add `firefox` and `webkit` to `projects` in the config, and install them in the workflow.
-- **Page Object Model**: move the login steps into a `LoginPage` class in `tests/pages/` and reuse it.
-- **Log in once**: use a [setup project with `storageState`](https://playwright.dev/docs/auth) so tests skip the login form.
-- **Test the other SauceDemo users**: `problem_user`, `performance_glitch_user` and `error_user` each have a different bug to find.
-- **Shard in CI**: split the tests across several machines with a [matrix and `--shard`](https://playwright.dev/docs/test-sharding).
-
 ## Other practice sites
 
 - https://demo.playwright.dev/todomvc: Playwright's own demo to-do app
