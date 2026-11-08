@@ -2,8 +2,11 @@
   "name": "ci-qa-automation-lab",
   "version": "1.0.0",
   "private": true,
-  "description": "Learning Playwright + GitHub Actions against the SauceDemo practice site",
+  "description": "Dev app + Playwright tests in one repo, with CI and a SIT deploy pipeline on GitHub Actions",
   "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "start": "npm run build && npm run serve",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
