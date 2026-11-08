@@ -20,8 +20,19 @@ export default defineConfig({
   // Retry flaky tests on CI only.
   retries: isCI ? 2 : 0,
   workers: isCI ? 2 : undefined,
-  // On CI: a list in the log + an HTML report we upload as an artifact.
-  reporter: isCI ? [['list'], ['html', { open: 'never' }]] : [['html', { open: 'on-failure' }]],
+  // On CI:
+  // - list: one line per test in the job log
+  // - github: shows each failure on the run page, with its file and line
+  // - github-summary: our own reporter, writes a results table to the run's Summary page
+  // - html: the full report (screenshots, traces), uploaded as an artifact
+  reporter: isCI
+    ? [
+        ['list'],
+        ['github'],
+        ['./reporters/github-summary.ts'],
+        ['html', { open: 'never' }],
+      ]
+    : [['html', { open: 'on-failure' }]],
 
   use: {
     baseURL,

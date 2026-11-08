@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { openApp } from './helpers';
 
-// The SIT pipeline sets EXPECTED_VERSION to the git tag (e.g. sit_1.0.0).
-// Locally the build stamps "local-dev".
-const expectedVersion = process.env.EXPECTED_VERSION ?? 'local-dev';
+// Which version the app should show in its footer:
+// - EXPECTED_VERSION set (the SIT pipeline sets it to the git tag) -> exactly that
+// - testing SIT without EXPECTED_VERSION (a manual re-run) -> any sit_* version
+// - testing localhost -> "local-dev", which scripts/build.mjs stamps by default
+const expectedVersion: string | RegExp =
+  process.env.EXPECTED_VERSION || (process.env.SIT_URL ? /^sit_/ : 'local-dev');
 
 test.describe('Smoke', () => {
   test('app loads and shows the login form', async ({ page }) => {

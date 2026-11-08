@@ -23,7 +23,7 @@ The app under test is Task Tracker, in `app/`. You log in, then add, complete, f
 │   ├── login.spec.ts                  # login, wrong password, empty form, logout
 │   └── tasks.spec.ts                  # add, validate, complete, filter, delete, reload
 ├── .github/workflows/
-│   ├── ci.yml                         # manual only: test on the runner
+│   ├── ci.yml                         # manual only: test SIT or a fresh build on the runner
 │   └── sit.yml                        # on a sit_* tag: build, deploy to SIT, test SIT
 ├── playwright.config.ts               # baseURL (localhost or SIT_URL), retries, reporters
 └── package.json                       # npm scripts
@@ -90,21 +90,24 @@ The tests open the app with `page.goto('./')`, not `page.goto('/')`. On GitHub P
 
 ## The two pipelines
 
-| Trigger                        | Workflow | What it does                                                                                              |
-| ------------------------------ | -------- | --------------------------------------------------------------------------------------------------------- |
-| Run workflow button (manual)   | CI       | Installs dependencies, builds and serves the app on the runner, runs the tests                            |
-| Push a `sit_*` tag             | SIT      | Builds the app with the tag as its version, deploys it to GitHub Pages, waits for it, runs the tests on it |
+| Trigger                      | Workflow           | What it does                                                                                               |
+| ---------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Push a `sit_*` tag           | SIT                | Builds the app with the tag as its version, deploys it to GitHub Pages, waits for it, runs the tests on it |
+| Run workflow button (manual) | Run tests (manual) | Runs the tests against SIT without deploying, or against a fresh build on the runner                       |
 
-### CI (`.github/workflows/ci.yml`)
+Pushing to `main` triggers neither workflow.
 
-The CI workflow runs only when you start it by hand. In the Actions tab, pick CI and click **Run workflow**. Pushes and pull requests to `main` don't trigger it. Use it to test a change on GitHub without deploying to SIT. It has these steps:
+### Run tests (manual) (`.github/workflows/ci.yml`)
 
-1. Check out the code.
-2. Install Node.js and restore the npm cache.
-3. Run `npm ci`, which installs the exact versions in `package-lock.json`.
-4. Run `npx playwright install --with-deps chromium` to install the browser and the Linux libraries it needs.
-5. Run `npx playwright test`, which builds and serves the app on the runner and then runs the tests.
-6. Upload `playwright-report/` as an artifact, even when tests fail.
+This workflow runs only when you start it by hand. In the Actions tab, pick "Run tests (manual)", click **Run workflow**, and choose the inputs:
+
+| Input              | Value           | What happens                                                                                                  |
+| ------------------ | --------------- | ------------------------------------------------------------------------------------------------------------- |
+| `target`           | `sit` (default) | Tests the app already deployed on SIT. Use it to re-run the SIT tests without deploying again.               |
+| `target`           | `local`         | Builds the app from the chosen branch, serves it on the runner, and tests that. Use it before you tag `sit_*`. |
+| `expected_version` | a tag, such as `sit_1.0.1` | SIT only. The smoke test fails unless SIT serves this version. Leave it empty to accept any `sit_*` version.  |
+
+For `target = sit`, the workflow asks the GitHub API for the repo's Pages URL, so a custom domain works without changing anything. It then runs `npx playwright test` with `SIT_URL` set to that URL. It uploads the HTML report as `playwright-report-sit` or `playwright-report-local`, even when tests fail.
 
 ### SIT (`.github/workflows/sit.yml`)
 
@@ -157,7 +160,7 @@ GitHub Actions sets `CI=true`. `playwright.config.ts` reads it and changes these
 ### Read a failed CI run
 
 1. Open the failed run in the Actions tab.
-2. Scroll to Artifacts and download `playwright-report`. For a SIT run, the artifact is `sit-playwright-report`.
+2. Scroll to Artifacts and download the report. It is `sit-playwright-report` for a SIT deploy run, and `playwright-report-sit` or `playwright-report-local` for a manual run.
 3. Unzip it and run `npx playwright show-report path/to/playwright-report`.
 4. Click a failed test to see its screenshot and trace. The trace is a timeline of every action, with DOM snapshots and network calls.
 
