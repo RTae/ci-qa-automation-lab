@@ -8,7 +8,6 @@
 import { appendFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import type {
-  FullConfig,
   FullResult,
   Reporter,
   Suite,
@@ -28,11 +27,9 @@ const seconds = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 export default class GitHubSummaryReporter implements Reporter {
   private suite!: Suite;
-  private rootDir = process.cwd();
 
-  onBegin(config: FullConfig, suite: Suite) {
+  onBegin(_config: unknown, suite: Suite) {
     this.suite = suite;
-    this.rootDir = config.rootDir;
   }
 
   // This reporter writes to a file, not the terminal, so the list reporter
@@ -68,7 +65,9 @@ export default class GitHubSummaryReporter implements Reporter {
       lines.push('');
       for (const test of failed) {
         const last = test.results[test.results.length - 1];
-        const message = stripAnsi(last?.error?.message ?? 'No error message').slice(0, 2000);
+        // A timeout gives two errors: "Test timeout exceeded" and what it was waiting for.
+        const errors = last?.errors.map((e) => e.message ?? '') ?? [];
+        const message = stripAnsi(errors.join('\n\n') || 'No error message').slice(0, 3000);
         lines.push('<details open>');
         lines.push(`<summary><b>${escapeHtml(this.title(test))}</b> (${escapeHtml(this.location(test))})</summary>`);
         lines.push('');
@@ -102,6 +101,6 @@ export default class GitHubSummaryReporter implements Reporter {
   }
 
   private location(test: TestCase) {
-    return `${relative(this.rootDir, test.location.file)}:${test.location.line}`;
+    return `${relative(process.cwd(), test.location.file)}:${test.location.line}`;
   }
 }
