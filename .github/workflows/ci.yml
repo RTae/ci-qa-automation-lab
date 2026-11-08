@@ -64,9 +64,27 @@ jobs:
 
       # Upload the HTML report even when tests fail, so you can see what broke.
       - name: Upload HTML report
+        id: upload-report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ inputs.target }}
           path: playwright-report/
           retention-days: 14
+
+      # GitHub can't display the HTML report itself, so put a download link
+      # under the results table on the run's Summary page.
+      - name: Link the HTML report on the Summary page
+        if: ${{ !cancelled() && steps.upload-report.outputs.artifact-url != '' }}
+        env:
+          REPORT_URL: ${{ steps.upload-report.outputs.artifact-url }}
+        run: |
+          {
+            echo "### Full HTML report"
+            echo ""
+            echo "[Download the HTML report](${REPORT_URL}) (screenshots and traces), unzip it, then run:"
+            echo ""
+            echo '```bash'
+            echo 'npx playwright show-report path/to/the/unzipped/folder'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
