@@ -1,0 +1,113 @@
+# SIT pipeline: push a tag like sit_1.0.0 and this will
+#   1. build   - build the app, stamped with the tag as its version
+#   2. deploy  - deploy it to the SIT environment (GitHub Pages)
+#   3. test    - wait until SIT serves the new version, then run the app tests against it
+#
+#   git tag sit_1.0.0
+#   git push origin sit_1.0.0
+name: Deploy to SIT and test
+
+on:
+  push:
+    tags: ['sit_*']
+
+permissions:
+  contents: read
+
+# Only one SIT deploy at a time; a newer tag waits instead of clashing.
+concurrency:
+  group: sit
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build app
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Build app (version = tag name)
+        run: npm run build
+        env:
+          APP_VERSION: ${{ github.ref_name }}
+
+      - name: Upload build for GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/
+
+  deploy:
+    name: Deploy to SIT
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write     # to deploy to GitHub Pages
+      id-token: write  # to prove the deploy comes from this workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Hand the SIT URL to the test job.
+    outputs:
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  test:
+    name: Test SIT
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SIT_URL: ${{ needs.deploy.outputs.url }}
+      EXPECTED_VERSION: ${{ github.ref_name }}
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # A deploy can take a moment to go live. Poll version.json until SIT
+      # serves the version we just built (up to 5 minutes).
+      - name: Wait for SIT to serve ${{ github.ref_name }}
+        run: |
+          for i in $(seq 1 30); do
+            got=$(curl -fsS "${SIT_URL%/}/version.json?nocache=$RANDOM" | jq -r .version || true)
+            echo "Attempt $i: SIT serves '${got}', waiting for '${EXPECTED_VERSION}'"
+            if [ "$got" = "$EXPECTED_VERSION" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::SIT never served version ${EXPECTED_VERSION}"
+          exit 1
+
+      # SIT_URL is set, so Playwright tests the deployed app instead of
+      # starting a local server.
+      - name: Run tests against SIT
+        run: npx playwright test
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: sit-playwright-report
+          path: playwright-report/
+          retention-days: 14
