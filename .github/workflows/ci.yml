@@ -1,13 +1,9 @@
-# CI: runs on every push / PR to main, before anything is deployed.
+# CI: runs only when you start it by hand (Actions tab -> CI -> Run workflow).
 # Builds the app, serves it on the runner (localhost) and runs the tests.
+# Pushes to main do NOT trigger it. Deploys and SIT tests run from sit.yml on sit_* tags.
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  # Adds a "Run workflow" button in the Actions tab so you can run it by hand.
   workflow_dispatch:
 
 permissions:

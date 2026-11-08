@@ -33,6 +33,12 @@ function saveTasks() {
 
 // ---------- helpers ----------
 
+// Don't use crypto.randomUUID(): browsers only provide it on HTTPS or
+// localhost, so it worked in local tests but crashed on the plain-http SIT site.
+function newId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function showError(el, message) {
   el.textContent = message;
   el.hidden = !message;
@@ -135,7 +141,7 @@ function addTask(rawTitle) {
     return false;
   }
   showError($('task-error'), '');
-  state.tasks.push({ id: crypto.randomUUID(), title, done: false });
+  state.tasks.push({ id: newId(), title, done: false });
   saveTasks();
   render();
   return true;
