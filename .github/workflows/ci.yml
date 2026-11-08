@@ -1,16 +1,32 @@
-# CI: runs only when you start it by hand (Actions tab -> CI -> Run workflow).
-# Builds the app, serves it on the runner (localhost) and runs the tests.
-# Pushes to main do NOT trigger it. Deploys and SIT tests run from sit.yml on sit_* tags.
-name: CI
+# Manual test run: Actions tab -> "Run tests (manual)" -> Run workflow.
+# Nothing triggers it automatically. Pushes to main do not run it.
+#
+#   target = sit   (default) test the app that is already deployed on SIT.
+#                  Use it to re-run the SIT tests without deploying again.
+#   target = local build the app from this branch, serve it on the runner,
+#                  and test that. Use it to try a change before tagging sit_*.
+name: Run tests (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Where to run the tests
+        type: choice
+        options: [sit, local]
+        default: sit
+      expected_version:
+        description: "SIT only: the version SIT should serve, e.g. sit_1.0.1. Leave empty to accept any sit_* version."
+        type: string
+        required: false
 
 permissions:
   contents: read
+  pages: read # to look up the SIT URL from the repo's Pages settings
 
 jobs:
   test:
+    name: Test ${{ inputs.target }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -29,9 +45,21 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      # playwright.config.ts builds and starts the app itself (webServer),
-      # because SIT_URL is not set here.
+      # Ask GitHub where Pages serves the site. This follows a custom domain,
+      # so nothing is hard-coded. Setting SIT_URL makes playwright.config.ts
+      # test that URL instead of starting a local server.
+      - name: Look up the SIT URL
+        if: ${{ inputs.target == 'sit' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq .html_url)
+          echo "SIT URL: ${url}"
+          echo "SIT_URL=${url}" >> "$GITHUB_ENV"
+
       - name: Run Playwright tests
+        env:
+          EXPECTED_VERSION: ${{ inputs.target == 'sit' && inputs.expected_version || '' }}
         run: npx playwright test
 
       # Upload the HTML report even when tests fail, so you can see what broke.
@@ -39,6 +67,6 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ inputs.target }}
           path: playwright-report/
           retention-days: 14
