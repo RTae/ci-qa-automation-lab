@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task Tracker</title>
+  <!-- Relative paths (./) so the app works both on localhost and under a
+       GitHub Pages sub-path like https://user.github.io/repo/ -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Task Tracker</h1>
+    <button id="logout-button" class="link" data-test="logout-button" hidden>Log out</button>
+  </header>
+
+  <main>
+    <!-- Login view -->
+    <section id="login-view" class="card" data-test="login-view">
+      <h2>Log in</h2>
+      <form id="login-form" novalidate>
+        <label for="username">Username</label>
+        <input id="username" data-test="username" autocomplete="username">
+
+        <label for="password">Password</label>
+        <input id="password" type="password" data-test="password" autocomplete="current-password">
+
+        <p id="login-error" class="error" role="alert" data-test="login-error" hidden></p>
+        <button type="submit" data-test="login-button">Log in</button>
+      </form>
+      <p class="hint">Demo account: <code>demo</code> / <code>password123</code></p>
+    </section>
+
+    <!-- Task board view (shown after login) -->
+    <section id="board-view" class="card" data-test="board-view" hidden>
+      <h2 id="welcome" data-test="welcome"></h2>
+
+      <form id="task-form" class="row" novalidate>
+        <input id="task-input" data-test="task-input" placeholder="What needs to be done?" aria-label="New task">
+        <button type="submit" data-test="add-task-button">Add</button>
+      </form>
+      <p id="task-error" class="error" role="alert" data-test="task-error" hidden></p>
+
+      <div class="filters" role="group" aria-label="Filter tasks">
+        <button type="button" data-filter="all" data-test="filter-all" aria-pressed="true">All</button>
+        <button type="button" data-filter="active" data-test="filter-active" aria-pressed="false">Active</button>
+        <button type="button" data-filter="done" data-test="filter-done" aria-pressed="false">Done</button>
+      </div>
+
+      <ul id="task-list" data-test="task-list"></ul>
+      <p id="empty-state" class="muted" data-test="empty-state" hidden>No tasks here.</p>
+      <p id="task-count" class="muted" data-test="task-count"></p>
+    </section>
+  </main>
+
+  <footer>Version: <span id="app-version" data-test="app-version">loading…</span></footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
