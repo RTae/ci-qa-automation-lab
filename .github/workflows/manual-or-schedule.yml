@@ -1,13 +1,20 @@
-# Manual test run: Actions tab -> "Run tests (manual)" -> Run workflow.
-# Nothing triggers it automatically. Pushes to main do not run it.
+# Runs the tests in two ways. Pushes to main do not run it.
+#
+#   1. Every hour, on a schedule: tests SIT, to catch it breaking between deploys.
+#   2. By hand: Actions tab -> "Run tests (manual or schedule)" -> Run workflow.
 #
 #   target = sit   (default) test the app that is already deployed on SIT.
 #                  Use it to re-run the SIT tests without deploying again.
 #   target = local build the app from this branch, serve it on the runner,
 #                  and test that. Use it to try a change before tagging sit_*.
-name: Run tests (manual)
+name: Run tests (manual or schedule)
 
 on:
+  schedule:
+    # Cron in UTC: minute 17 of every hour. GitHub is busiest at minute 0,
+    # so runs scheduled then are more often delayed or dropped.
+    # Scheduled runs use the workflow file on the default branch (main).
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       target:
@@ -26,9 +33,12 @@ permissions:
 
 jobs:
   test:
-    name: Test ${{ inputs.target }}
+    # Scheduled runs have no inputs, so inputs.target is empty. Fall back to sit.
+    name: Test ${{ inputs.target || 'sit' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      TARGET: ${{ inputs.target || 'sit' }}
     steps:
       - name: Check out the code
         uses: actions/checkout@v7
@@ -49,7 +59,7 @@ jobs:
       # so nothing is hard-coded. Setting SIT_URL makes playwright.config.ts
       # test that URL instead of starting a local server.
       - name: Look up the SIT URL
-        if: ${{ inputs.target == 'sit' }}
+        if: ${{ env.TARGET == 'sit' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -59,7 +69,7 @@ jobs:
 
       - name: Run Playwright tests
         env:
-          EXPECTED_VERSION: ${{ inputs.target == 'sit' && inputs.expected_version || '' }}
+          EXPECTED_VERSION: ${{ env.TARGET == 'sit' && inputs.expected_version || '' }}
         run: npx playwright test
 
       # Upload the HTML report even when tests fail, so you can see what broke.
@@ -68,7 +78,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report-${{ inputs.target }}
+          name: playwright-report-${{ env.TARGET }}
           path: playwright-report/
           retention-days: 14
 

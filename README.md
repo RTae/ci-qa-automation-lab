@@ -25,7 +25,7 @@ The app under test is Task Tracker, in `app/`. You log in, then add, complete, f
 │   ├── login.spec.ts                  # login, wrong password, empty form, logout
 │   └── tasks.spec.ts                  # add, validate, complete, filter, delete, reload
 ├── .github/workflows/
-│   ├── manual-test.yml                # manual only: test SIT or a fresh build on the runner
+│   ├── manual-or-schedule.yml         # hourly and by hand: test SIT or a fresh build on the runner
 │   └── sit.yml                        # on a sit_* tag: build, deploy to SIT, test SIT
 ├── playwright.config.ts               # baseURL (localhost or SIT_URL), retries, reporters
 └── package.json                       # npm scripts
@@ -92,16 +92,23 @@ The tests open the app with `page.goto('./')`, not `page.goto('/')`. On GitHub P
 
 ## The two pipelines
 
-| Trigger                      | Workflow           | What it does                                                                                               |
-| ---------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| Push a `sit_*` tag           | SIT                | Builds the app with the tag as its version, deploys it to GitHub Pages, waits for it, runs the tests on it |
-| Run workflow button (manual) | Run tests (manual) | Runs the tests against SIT without deploying, or against a fresh build on the runner                       |
+| Trigger                                | Workflow                    | What it does                                                                                               |
+| -------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Push a `sit_*` tag                     | SIT                         | Builds the app with the tag as its version, deploys it to GitHub Pages, waits for it, runs the tests on it |
+| Every hour, or the Run workflow button | Run tests (manual or schedule) | Runs the tests against SIT without deploying, or against a fresh build on the runner                       |
 
 Pushing to `main` triggers neither workflow.
 
-### Run tests (manual) (`.github/workflows/manual-test.yml`)
+### Run tests (manual or schedule) (`.github/workflows/manual-or-schedule.yml`)
 
-This workflow runs only when you start it by hand. In the Actions tab, pick "Run tests (manual)", click **Run workflow**, and choose the inputs:
+This workflow runs in two ways:
+
+- Every hour, at minute 17 (UTC), it tests SIT. This catches SIT breaking between deploys, for example when the site goes down. Scheduled runs have no inputs, so they use `target = sit` and accept any `sit_*` version.
+- By hand. In the Actions tab, pick "Run tests (manual or schedule)", click **Run workflow**, and choose the inputs below.
+
+To change the schedule, edit the `cron` line in the file. [crontab.guru](https://crontab.guru) explains cron expressions. GitHub runs the schedule from the file on `main` only. Runs can start a few minutes late when GitHub is busy. On a public repo, GitHub turns the schedule off after 60 days with no commits, and you turn it back on from the Actions tab. When a scheduled run fails, GitHub emails the person who last changed the `cron` line.
+
+The inputs for a manual run:
 
 | Input              | Value           | What happens                                                                                                  |
 | ------------------ | --------------- | ------------------------------------------------------------------------------------------------------------- |
