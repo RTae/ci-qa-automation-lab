@@ -36,9 +36,13 @@ test.describe('Shopping cart and checkout', () => {
     await page.getByTestId('add-to-cart-sauce-labs-backpack').click();
     await page.getByTestId('shopping-cart-link').click();
 
-    // Cart page
+    // Cart page. The URL changes before the cart renders, so wait for the
+    // cart's own title, then look for items only inside the cart list.
+    // (The Products page also has "inventory-item-name" elements, 6 of them.)
     await expect(page).toHaveURL(/cart\.html/);
-    await expect(page.getByTestId('inventory-item-name')).toHaveText('Sauce Labs Backpack');
+    await expect(page.getByTestId('title')).toHaveText('Your Cart');
+    const cartItems = page.getByTestId('cart-list').getByTestId('inventory-item-name');
+    await expect(cartItems).toHaveText(['Sauce Labs Backpack']);
     await page.getByTestId('checkout').click();
 
     // Step one: your information
