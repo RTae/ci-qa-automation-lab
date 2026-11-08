@@ -17,6 +17,8 @@ The app under test is Task Tracker, in `app/`. You log in, then add, complete, f
 ├── scripts/
 │   ├── build.mjs                      # copies app/ to dist/ and writes dist/version.json
 │   └── serve.mjs                      # serves dist/ on http://localhost:4173
+├── reporters/
+│   └── github-summary.ts              # writes test results to the GitHub Actions run page
 ├── tests/                             # test code, runs against localhost or SIT
 │   ├── helpers.ts                     # login() and addTask(), shared by the tests
 │   ├── smoke.spec.ts                  # page loads, deployed version is correct
@@ -154,15 +156,21 @@ GitHub Actions sets `CI=true`. `playwright.config.ts` reads it and changes these
 | `retries`    | 0                                                  | 2                                         |
 | `workers`    | auto                                               | 2                                         |
 | `forbidOnly` | off                                                | on, so a stray `test.only` fails the build |
-| `reporter`   | HTML report, opens when a test fails               | list in the log, plus an HTML report      |
+| `reporter`   | HTML report, opens when a test fails               | list, github, github-summary and HTML report |
 | `trace`      | on first retry, so never, because local runs don't retry | on first retry                      |
 
 ### Read a failed CI run
 
-1. Open the failed run in the Actions tab.
-2. Scroll to Artifacts and download the report. It is `sit-playwright-report` for a SIT deploy run, and `playwright-report-sit` or `playwright-report-local` for a manual run.
-3. Unzip it and run `npx playwright show-report path/to/playwright-report`.
-4. Click a failed test to see its screenshot and trace. The trace is a timeline of every action, with DOM snapshots and network calls.
+GitHub can't display the HTML report, so the workflows put the results on the run page itself. Open the run in the Actions tab and look at its Summary page:
+
+- The Annotations box lists each failure with its error, and links to the line in the test file. The built-in `github` reporter adds these.
+- Below it, the test job's summary has a results table, the full error of every failed test, and a link to download the HTML report. Our own reporter, `reporters/github-summary.ts`, writes this.
+
+For screenshots and traces, open the HTML report:
+
+1. Click the download link on the Summary page, or scroll to Artifacts. The report is `sit-playwright-report` for a SIT deploy run, and `playwright-report-sit` or `playwright-report-local` for a manual run.
+2. Unzip it and run `npx playwright show-report path/to/the/folder`. Quote the path if it has spaces. Don't double-click `index.html`, because the trace viewer only works when the report is served this way.
+3. Click a failed test to see its screenshot and trace. The trace is a timeline of every action, with DOM snapshots and network calls.
 
 ## Other practice sites
 
