@@ -86,17 +86,6 @@ GitHub Actions sets `CI=true`, and the config uses it to change behaviour on CI:
 3. Unzip it and run `npx playwright show-report path/to/playwright-report`.
 4. Click a failed test to see its screenshot and trace (a timeline of every action, DOM snapshot and network call).
 
-## Push to GitHub
-
-```bash
-git add .
-git commit -m "chore: add Playwright tests and CI workflow"
-git remote add origin https://github.com/<your-username>/ci-qa-automation-lab.git
-git push -u origin main
-```
-
-Then open the **Actions** tab of your repo to watch the run.
-
 ## Ideas for practice
 
 - **Break a test on purpose** (for example, expect `'3'` in the cart badge) and push it. Watch CI fail, then download the report and read the trace.
