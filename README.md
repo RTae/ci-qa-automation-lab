@@ -6,7 +6,7 @@ The tests run against [SauceDemo](https://www.saucedemo.com), a free practice sh
 
 ## Project layout
 
-```
+```txt
 .
 ├── .github/workflows/playwright.yml   # CI: runs the tests on every push / PR
 ├── tests/
@@ -71,13 +71,13 @@ Steps:
 
 GitHub Actions sets `CI=true`, and the config uses it to change behaviour on CI:
 
-| Setting       | Local                 | CI                                          |
-| ------------- | --------------------- | ------------------------------------------- |
-| `retries`     | 0                     | 2                                           |
-| `workers`     | auto                  | 2                                           |
-| `forbidOnly`  | off                   | on (a stray `test.only` fails the build)    |
-| `reporter`    | HTML, opens on fail   | list in the log + HTML file                 |
-| `trace`       | on first retry (none, since local has 0 retries) | on first retry           |
+| Setting      | Local                                                | CI                                          |
+| ------------ | ---------------------------------------------------- | ------------------------------------------- |
+| `retries`    | 0                                                    | 2                                           |
+| `workers`    | auto                                                 | 2                                           |
+| `forbidOnly` | off                                                  | on (a stray `test.only` fails the build)    |
+| `reporter`   | HTML, opens on fail                                  | list in the log + HTML file                 |
+| `trace`      | on first retry (none, since local has 0 retries)     | on first retry                              |
 
 ### Read a failed CI run
 
@@ -88,6 +88,6 @@ GitHub Actions sets `CI=true`, and the config uses it to change behaviour on CI:
 
 ## Other practice sites
 
-- https://demo.playwright.dev/todomvc: Playwright's own demo to-do app
-- https://the-internet.herokuapp.com: one page per tricky UI case (iframes, alerts, drag and drop, file upload)
-- https://practice.expandtesting.com: forms, tables, and a REST API for API testing
+- [https://demo.playwright.dev/todomvc](https://demo.playwright.dev/todomvc): Playwright's own demo to-do app
+- [https://the-internet.herokuapp.com](https://the-internet.herokuapp.com): one page per tricky UI case (iframes, alerts, drag and drop, file upload)
+- [practice.expandtesting.com](https://practice.expandtesting.com): forms, tables, and a REST API for API testing
