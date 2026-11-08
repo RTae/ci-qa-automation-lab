@@ -1,0 +1,16 @@
+{
+  "name": "ci-qa-automation-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Learning Playwright + GitHub Actions against the SauceDemo practice site",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6"
+  }
+}
